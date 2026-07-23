@@ -1,27 +1,57 @@
 name: Build APK
+
 on:
   push:
     branches: ['**']
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/setup-java@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
-      - uses: android-actions/setup-android@v3
-      - run: sdkmanager "ndk;25.2.9519653" "cmake;3.22.1"
-      - run: chmod +x ./gradlew
-      - run: ./gradlew assembleDebug --stacktrace
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK & CMake
+        run: sdkmanager "ndk;25.2.9519653" "cmake;3.22.1"
+
+      - name: Setup Gradle Wrapper
+        run: |
+          mkdir -p gradle/wrapper
+          curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar
+          curl -L -o gradlew https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradlew
+          chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.9519653
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.951963
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
