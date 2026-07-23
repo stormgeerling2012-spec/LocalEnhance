@@ -65,8 +65,7 @@ fun DownloadScreen(onModelsReady: () -> Unit) {
             Text("AI models required for local processing", fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(8.dp))
-            Text("SD-Turbo (Q4_0): ~1.8 GB
-TAESD (Tiny VAE): ~4 MB", fontSize = 14.sp,
+            Text("SD-Turbo (Q4_0): ~1.8 GB\nTAESD (Tiny VAE): ~4 MB", fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(24.dp))
             Button(
