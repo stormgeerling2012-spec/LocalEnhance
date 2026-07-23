@@ -17,6 +17,20 @@ jobs:
           git clone --recursive https://github.com/leejet/stable-diffusion.cpp.git app/src/main/cpp/stable-diffusion.cpp
           cd app/src/main/cpp/stable-diffusion.cpp
           git submodule update --init --recursive
+          echo "=== Cloned commit ==="
+          git log -1 --format="%H %ci"
+
+      - name: Dump stable-diffusion.h for debugging
+        run: |
+          find app/src/main/cpp/stable-diffusion.cpp -maxdepth 1 -iname "stable-diffusion.h" -exec echo "--- {} ---" \; -exec cat {} \; > sd_header_dump.txt
+          cat sd_header_dump.txt
+
+      - name: Upload header dump
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sd-header-dump
+          path: sd_header_dump.txt
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
