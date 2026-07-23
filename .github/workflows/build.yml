@@ -15,9 +15,13 @@ jobs:
       - name: Clone stable-diffusion.cpp with all submodules
         run: |
           git clone --recursive https://github.com/leejet/stable-diffusion.cpp.git app/src/main/cpp/stable-diffusion.cpp
-          ls -la app/src/main/cpp/stable-diffusion.cpp/
-          ls -la app/src/main/cpp/stable-diffusion.cpp/ggml/
-          test -f app/src/main/cpp/stable-diffusion.cpp/ggml/CMakeLists.txt && echo "GGML FOUND" || echo "GGML MISSING"
+          cd app/src/main/cpp/stable-diffusion.cpp
+          git submodule update --init --recursive
+          ls -la ggml/src/ggml-vulkan/
+          test -f ggml/src/ggml-vulkan/CMakeLists.txt && echo "VULKAN CMAKE FOUND" || echo "VULKAN CMAKE MISSING"
+          ls -la ggml/src/ggml-vulkan/SPIRV-Headers/ 2>/dev/null || echo "SPIRV-Headers NOT FOUND - checking alternate location"
+          find . -name "SPIRV-Headers" -type d 2>/dev/null || true
+          find . -name "spirv-headers" -type d 2>/dev/null || true
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
