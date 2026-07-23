@@ -12,11 +12,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Clone stable-diffusion.cpp manually
+      - name: Clone stable-diffusion.cpp with all submodules
         run: |
-          git clone --depth 1 https://github.com/leejet/stable-diffusion.cpp.git app/src/main/cpp/stable-diffusion.cpp
+          git clone --recursive https://github.com/leejet/stable-diffusion.cpp.git app/src/main/cpp/stable-diffusion.cpp
           ls -la app/src/main/cpp/stable-diffusion.cpp/
-          test -f app/src/main/cpp/stable-diffusion.cpp/stable-diffusion.h && echo "HEADER FOUND" || echo "HEADER MISSING"
+          ls -la app/src/main/cpp/stable-diffusion.cpp/ggml/
+          test -f app/src/main/cpp/stable-diffusion.cpp/ggml/CMakeLists.txt && echo "GGML FOUND" || echo "GGML MISSING"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -44,7 +45,7 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace 2>&1 | tee build.log
         env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.951963
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.9519653
 
       - name: Upload Build Log
         if: always()
