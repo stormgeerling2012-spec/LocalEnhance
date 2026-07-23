@@ -24,8 +24,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install NDK & CMake
-        run: sdkmanager "ndk;25.2.9519653" "cmake;3.22.1"
+      - name: Install NDK, CMake, Vulkan
+        run: |
+          sdkmanager "ndk;25.2.9519653" "cmake;3.22.1"
+          sudo apt-get update
+          sudo apt-get install -y libvulkan-dev
 
       - name: Setup Gradle Wrapper
         run: |
@@ -34,24 +37,27 @@ jobs:
           curl -L -o gradlew https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradlew
           chmod +x gradlew
 
+      - name: Verify files exist
+        run: |
+          ls -la app/src/main/cpp/
+          ls -la app/src/main/cpp/stable-diffusion.cpp/ || echo "SUBMODULE EMPTY"
+          test -f app/src/main/cpp/stable-diffusion.cpp/stable-diffusion.h && echo "HEADER FOUND" || echo "HEADER MISSING"
+
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace 2>&1 | tee build.log
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.9519653
 
+      - name: Upload Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+
       - name: Upload Debug APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.951963
-
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
