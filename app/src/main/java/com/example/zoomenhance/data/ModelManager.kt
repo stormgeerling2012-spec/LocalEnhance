@@ -21,11 +21,11 @@ object ModelManager {
     private val _progress = MutableStateFlow(DownloadProgress())
     val progress: Flow<DownloadProgress> = _progress.asStateFlow()
 
-    private const val SD_TURBO_URL = "https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/sd-turbo-Q4_0.gguf"
-    private const val TAESD_URL = "https://huggingface.co/madebyollin/taesd/resolve/main/taesd.gguf"
+    private const val SD_TURBO_URL = "https://huggingface.co/gpustack/stable-diffusion-v2-1-turbo-GGUF/resolve/main/stable-diffusion-v2-1-turbo-Q4_0.gguf"
+    private const val TAESD_URL = "https://huggingface.co/madebyollin/taesd/resolve/main/diffusion_pytorch_model.safetensors"
 
     fun getModelFile(context: Context): File = File(context.filesDir, "sd-turbo-q4_0.gguf")
-    fun getTaesdFile(context: Context): File = File(context.filesDir, "taesd.gguf")
+    fun getTaesdFile(context: Context): File = File(context.filesDir, "taesd.safetensors")
 
     fun areModelsReady(context: Context): Boolean {
         return getModelFile(context).exists() && getTaesdFile(context).exists()
