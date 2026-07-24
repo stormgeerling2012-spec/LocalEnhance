@@ -22,7 +22,10 @@ jobs:
 
       - name: Dump stable-diffusion.h for debugging
         run: |
-          find app/src/main/cpp/stable-diffusion.cpp -maxdepth 1 -iname "stable-diffusion.h" -exec echo "--- {} ---" \; -exec cat {} \; > sd_header_dump.txt
+          find app/src/main/cpp/stable-diffusion.cpp -iname "stable-diffusion.h" -exec echo "--- {} ---" \; -exec cat {} \; > sd_header_dump.txt
+          echo "--- file listing (for sanity) ---" >> sd_header_dump.txt
+          find app/src/main/cpp/stable-diffusion.cpp -maxdepth 2 -iname "*.h" >> sd_header_dump.txt
+          wc -l sd_header_dump.txt
           cat sd_header_dump.txt
 
       - name: Upload header dump
