@@ -109,9 +109,17 @@ Java_com_example_zoomenhance_NativeLib_initModel(JNIEnv* env, jclass clazz,
     const char* model_path = env->GetStringUTFChars(j_model_path, nullptr);
     const char* taesd_path = env->GetStringUTFChars(j_taesd_path, nullptr);
     LOGI("Loading SD-Turbo: %s", model_path);
-    g_sd_ctx = new_sd_ctx(model_path, nullptr, taesd_path, nullptr, nullptr,
-        nullptr, nullptr, false, true, false, 4, SD_TYPE_Q4_0,
-        STD_DEFAULT_RNG, KARRAS, false, false, false);
+
+    sd_ctx_params_t ctx_params;
+    sd_ctx_params_init(&ctx_params);
+    ctx_params.model_path = model_path;
+    ctx_params.taesd_path = taesd_path;
+    ctx_params.n_threads = 4;
+    ctx_params.wtype = SD_TYPE_Q4_0;
+    ctx_params.rng_type = STD_DEFAULT_RNG;
+
+    g_sd_ctx = new_sd_ctx(&ctx_params);
+
     env->ReleaseStringUTFChars(j_model_path, model_path);
     env->ReleaseStringUTFChars(j_taesd_path, taesd_path);
     if (!g_sd_ctx) { LOGE("new_sd_ctx failed"); return JNI_FALSE; }
@@ -130,13 +138,29 @@ Java_com_example_zoomenhance_NativeLib_enhanceImage(JNIEnv* env, jclass clazz, j
     const char* prompt = "photorealistic, hyperdetailed micro textures, sharp focus, 8k";
     const char* negative = "blurry, pixelated, artifacts, noise";
     LOGI("img2img: 4 steps, strength=0.25");
-    sd_image_t* output = img2img(g_sd_ctx, input_image, prompt, negative,
-        1.0f, 4, 0.25f, 42, EULER_A, false, 0.9f, false, nullptr, nullptr);
+
+    sd_img_gen_params_t gen_params;
+    sd_img_gen_params_init(&gen_params);
+    gen_params.prompt = prompt;
+    gen_params.negative_prompt = negative;
+    gen_params.init_image = input_image;
+    gen_params.width = width;
+    gen_params.height = height;
+    gen_params.strength = 0.25f;
+    gen_params.seed = 42;
+    gen_params.batch_count = 1;
+    gen_params.sample_params.scheduler = KARRAS_SCHEDULER;
+    gen_params.sample_params.sample_method = EULER_A_SAMPLE_METHOD;
+    gen_params.sample_params.sample_steps = 4;
+    gen_params.sample_params.guidance.txt_cfg = 1.0f;
+
+    sd_image_t* images_out = nullptr;
+    int num_images_out = 0;
+    bool ok = generate_image(g_sd_ctx, &gen_params, &images_out, &num_images_out);
     delete[] rgb_input;
-    if (!output) { LOGE("img2img failed"); return nullptr; }
-    jobject result = rgb_to_bitmap(env, output->data, output->width, output->height);
-    free_sd_image(*output);
-    delete output;
+    if (!ok || !images_out || num_images_out < 1) { LOGE("generate_image failed"); return nullptr; }
+    jobject result = rgb_to_bitmap(env, images_out[0].data, images_out[0].width, images_out[0].height);
+    free_sd_images(images_out, num_images_out);
     LOGI("Done");
     return result;
 }
