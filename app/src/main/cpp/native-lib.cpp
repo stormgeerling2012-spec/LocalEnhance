@@ -64,7 +64,8 @@ static jobject rgb_to_bitmap(JNIEnv* env, const uint8_t* rgb, int width, int hei
     jobject argb_config = env->GetStaticObjectField(config_cls, argb_field);
     jobject bitmap = env->CallStaticObjectMethod(bitmap_cls, create_bitmap,
         width, height, argb_config);
-    if (!bitmap) {
+    if (env->ExceptionCheck() || !bitmap) {
+        env->ExceptionClear();
         env->DeleteLocalRef(bitmap_cls);
         env->DeleteLocalRef(config_cls);
         env->DeleteLocalRef(argb_config);
@@ -161,6 +162,7 @@ Java_com_example_zoomenhance_NativeLib_enhanceImage(JNIEnv* env, jclass clazz, j
     if (!ok || !images_out || num_images_out < 1) { LOGE("generate_image failed"); return nullptr; }
     jobject result = rgb_to_bitmap(env, images_out[0].data, images_out[0].width, images_out[0].height);
     free_sd_images(images_out, num_images_out);
+    if (env->ExceptionCheck()) { env->ExceptionClear(); return nullptr; }
     LOGI("Done");
     return result;
 }

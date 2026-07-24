@@ -106,7 +106,8 @@ fun EnhanceScreen(onNavigateToSettings: () -> Unit) {
                     scope.launch(Dispatchers.Default) {
                         isLoading = true
                         try {
-                            val result = NativeLib.enhanceImage(input)
+                            val scaled = resizeBitmap(input, 512)
+                            val result = NativeLib.enhanceImage(scaled)
                             withContext(Dispatchers.Main) { enhancedBitmap = result }
                         } finally {
                             withContext(Dispatchers.Main) { isLoading = false }
@@ -126,6 +127,14 @@ fun EnhanceScreen(onNavigateToSettings: () -> Unit) {
             }
         }
     }
+}
+
+private fun resizeBitmap(bitmap: Bitmap, maxDim: Int): Bitmap {
+    val w = bitmap.width
+    val h = bitmap.height
+    if (w <= maxDim && h <= maxDim) return bitmap
+    val ratio = maxDim.toFloat() / maxOf(w, h)
+    return Bitmap.createScaledBitmap(bitmap, (w * ratio).toInt(), (h * ratio).toInt(), true)
 }
 
 private fun uriToBitmap(context: android.content.Context, uri: Uri): Bitmap? {
